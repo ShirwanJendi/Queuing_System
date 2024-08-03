@@ -67,7 +67,7 @@ def publish(client):
     lcd.print("Your number:")
     
     centered_value = center_text(value, NUM_COLS)
-    lcd.set_cursor(0, 2)  # Leave one line space between the two lines
+    lcd.set_cursor(0, 2)
     lcd.print(centered_value)
 
     # Clear the LCD after 10 seconds
