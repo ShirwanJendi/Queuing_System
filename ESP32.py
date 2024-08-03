@@ -14,7 +14,7 @@ I2C_ADDR = 0x27  # I2C address of the 2004A LCD
 NUM_ROWS = 4
 NUM_COLS = 20
 
-# I2C interface for the LCD
+# Setup I2C interface for the LCD
 i2c = I2C(0, scl=Pin(22), sda=Pin(21), freq=800000)
 lcd = LCD(addr=I2C_ADDR, cols=NUM_COLS, rows=NUM_ROWS, i2c=i2c)
 lcd.begin()
@@ -67,7 +67,7 @@ def publish(client):
     lcd.print("Your number:")
     
     centered_value = center_text(value, NUM_COLS)
-    lcd.set_cursor(0, 2)
+    lcd.set_cursor(0, 2)  # Leave one line space between the two lines
     lcd.print(centered_value)
 
     # Clear the LCD after 10 seconds
@@ -87,7 +87,7 @@ def main():
     while True:
         if button.value() == 0 and not button_pressed:
             button_pressed = True
-            time.sleep(0.05)
+            time.sleep(0.05)  # debounce delay
             if button.value() == 0:
                 publish(client)
         elif button.value() == 1 and button_pressed:
@@ -95,3 +95,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
