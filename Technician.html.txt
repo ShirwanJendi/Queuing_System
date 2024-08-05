@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MobilSyn Technician</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .welcome-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #pressed-numbers {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            text-align: right;
+        }
+
+        .pressed-number {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .display-btn {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .number, .timestamp {
+            display: inline-block;
+        }
+
+        .timestamp {
+            margin-left: 10px;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+
+<body>
+    <div class="welcome-container">
+        <h1>MobilSyn Technician</h1>
+        <form id="info-form">
+            <label for="number">Number:</label>
+            <input type="text" id="number" name="number" required><br><br>
+            <label for="device_name">Device Name:</label>
+            <input type="text" id="device_name" name="device_name" required><br><br>
+            <label for="repair_info">Repair Info:</label>
+            <input type="text" id="repair_info" name="repair_info" required><br><br>
+            <label for="repair_time">Repair Time (minutes):</label>
+            <input type="number" id="repair_time" name="repair_time" required><br><br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div id="pressed-numbers"></div>
+
+    <script>
+        $(document).ready(function () {
+            const socket = io();
+
+            $('#info-form').submit(function (event) {
+                event.preventDefault();
+                const formData = {
+                    number: $('#number').val(),
+                    device_name: $('#device_name').val(),
+                    repair_info: $('#repair_info').val(),
+                    repair_time: $('#repair_time').val(),
+                    created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                };
+                $.ajax({
+                    url: '/save_info',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        console.log('Info saved successfully');
+                        $('#info-form')[0].reset(); // Reset the form after successful submission
+                        fetchLatestNumbers(); // Update the displayed numbers
+                    }
+                });
+            });
+
+            function updatePressedNumbers(numbers) {
+                $('#pressed-numbers').empty();
+                numbers.forEach(item => {
+                    $('#pressed-numbers').append(
+                        `<div class="pressed-number">
+                            <span class="number">${item.number}</span>
+                            <span class="timestamp">${item.timestamp}</span>
+                            <button class="display-btn" data-number="${item.number}">Display</button>
+                        </div>`
+                    );
+                });
+                $('.display-btn').click(function() {
+                    const number = $(this).data('number');
+                    $.ajax({
+                        url: '/display_number',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ number: number }),
+                        success: function (response) {
+                            console.log('Number displayed on TV');
+                        }
+                    });
+                });
+            }
+
+            socket.on('number_update', function (msg) {
+                fetchLatestNumbers();
+            });
+
+            function fetchLatestNumbers() {
+                $.ajax({
+                    url: '/get_latest_numbers',
+                    type: 'GET',
+                    success: function (data) {
+                        updatePressedNumbers(data);
+                    }
+                });
+            }
+
+            setInterval(fetchLatestNumbers, 5000); // Fetch latest numbers every 5 seconds
+        });
+    </script>
+</body>
+
+</html>
