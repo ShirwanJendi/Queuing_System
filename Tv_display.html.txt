@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Number</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #007bff; /* Blue background */
+            color: #fff; /* White text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .message {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .number {
+            font-size: 5rem;
+            font-weight: bold;
+        }
+
+        .repair-time {
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+
+        .top-left {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            text-align: left;
+        }
+
+        .number-info {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        {% if number %}
+        <div id="message" class="message">
+            Nu ekspederes: <span id="current-number">{{ number }}</span>
+        </div>
+        {% else %}
+        <div class="top-left">
+            {% for item in repair_times %}
+            <div class="number-info">
+                <div class="number">{{ item.number }}</div>
+                <div class="repair-time">Time Remaining: <span class="repair-time-{{ item.number }}">{{ item.time_remain }}</span></div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        {% for item in repair_times %}
+        (function() {
+            var number = "{{ item.number }}";
+            var repairTime = new Date("{{ item.time_remain }}").getTime();
+            var x = setInterval(function () {
+                var now = new Date().getTime();
+                var distance = repairTime - now;
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                document.querySelector(".repair-time-" + number).innerHTML = hours + "h " + minutes + "m " + seconds + "s ";
+                if (distance < 0) {
+                    clearInterval(x);
+                    document.querySelector(".repair-time-" + number).innerHTML = "EXPIRED";
+                }
+            }, 1000);
+        })();
+        {% endfor %}
+    </script>
+</body>
+
+</html>
